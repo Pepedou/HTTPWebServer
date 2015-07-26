@@ -21,8 +21,6 @@
 #ifndef HTTPWEBSERVER_LISTENER_H
 #define HTTPWEBSERVER_LISTENER_H
 
-#define MAX_PENDING_CONNECTIONS (10)
-
 int listener_Init(uint32_t ipAddressToUse, uint16_t portToUse);
 
 int listener_BindToPort();

@@ -20,8 +20,10 @@
 #ifndef HTTPWEBSERVER_WORKER_H
 #define HTTPWEBSERVER_WORKER_H
 
-#define MAX_NUM_WORKERS (20)
-#define MAX_HTTP_REQUEST_SIZE (8192)
+#define MAX_NUM_WORKERS (1000)
+#define BASE_DIR_PATH_MAX_LEN (200)
+
+extern char worker_BaseDir[BASE_DIR_PATH_MAX_LEN];
 
 void *worker_ServeRequest(void *params);
 

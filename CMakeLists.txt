@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.8)
 project (HTTPWebServer)
 find_package(Threads)
-add_executable(WebServer main.c main.c listener.h listener.c connections.h connections.c worker.h worker.c)
+add_executable(WebServer main.c main.c listener.h listener.c connections.h connections.c worker.h worker.c httpParser.h httpParser.c)
 target_link_libraries(WebServer ${CMAKE_THREAD_LIBS_INIT})

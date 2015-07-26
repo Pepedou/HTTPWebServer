@@ -23,6 +23,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <string.h>
+
 #include "connections.h"
 
 static ConnectionList_t connectionsList;

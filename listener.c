@@ -54,7 +54,7 @@ int listener_BindToPort() {
     sockAddrSelf.sin_addr.s_addr = htonl(ipAddress);
 
     if (bind(socketFd, (struct sockaddr *) &sockAddrSelf, sockLength) == -1) {
-        printf("Unable to bind to port %d. Error: %d", port, errno);
+        printf("Unable to bind to port %d. Error: %d\n", port, errno);
         return -1;
     }
 
@@ -62,8 +62,8 @@ int listener_BindToPort() {
 }
 
 int listener_ListenToPort() {
-    if (listen(socketFd, MAX_PENDING_CONNECTIONS) == -1) {
-        printf("Unable to listen at %d:%d. Error: %d.", ipAddress, port, errno);
+    if (listen(socketFd, SOMAXCONN) == -1) {
+        printf("Unable to listen at %d:%d. Error: %d.\n", ipAddress, port, errno);
         return -1;
     }
 

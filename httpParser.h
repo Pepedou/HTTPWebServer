@@ -45,6 +45,13 @@ typedef enum HTTP_STATUS_CODES_TAG
     HTTP_ERROR_NOT_IMPLEMENTED = 501
 } HttpStatusCode_t;
 
+typedef enum HTTP_CONTENT_TYPES_TAG
+{
+    HTTP_CONTENT_TEXT_PLAIN,
+    HTTP_CONTENT_TEXT_HTML,
+    HTTP_CONTENT_TEXT_XML
+} HttpContentType_t;
+
 typedef struct HTTP_REQUEST_DATA_TAG
 {
     HttpRequestMethods requestMethod;
@@ -57,6 +64,8 @@ int httpParser_ParseRequestMethod(char *requestLine, char *requestMethod);
 int httpParser_GetRequestLines(char *message, char linesBuffer[][MAX_HTTP_REQUEST_SIZE], const size_t linesBufferLen,
                                char **saveState);
 int httpParser_ParseRequestLine(char *requestLine, HttpRequestData_t *requestData, char **saveState);
-int httpParser_GenerateHttpResponse(char *replyBuffer, size_t bufferLen, const HttpStatusCode_t statusCode, const char *content, const int contentLength);
+int httpParser_GenerateHttpResponse(char *replyBuffer, size_t bufferLen, const HttpStatusCode_t statusCode, const HttpContentType_t contentType, const char *content, const int contentLength);
+HttpContentType_t httpParser_DetermineContentTypeFromFileExtension(const char *filePath);
+char *httpParser_GetContentTypeAsString(const HttpContentType_t contentType);
 
 #endif //HTTPWEBSERVER_HTTPPARSER_H

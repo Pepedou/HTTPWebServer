@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
 #include "httpParser.h"
 
 static int setRequestMethod(HttpRequestData_t *requestData, const char *requestMethod);
@@ -106,7 +107,7 @@ static int setRequestMethod(HttpRequestData_t *requestData, const char *requestM
 }
 
 static int setHttpVersion(HttpRequestData_t *requestData, char *requestVersion) {
-    char *result;
+    char *result = NULL;
     char *saveState = NULL;
     
     if (!requestVersion || !requestData) {
@@ -128,6 +129,51 @@ static int setHttpVersion(HttpRequestData_t *requestData, char *requestVersion) 
     return 1;
 }
 
-int httpParser_GenerateHttpResponse(char *replyBuffer, size_t bufferLen, const HttpStatusCode_t statusCode, const char *content, const int contentLength) {
-    return snprintf(replyBuffer, bufferLen, "HTTP/1.1 %d OK\r\nContent-Length: %d\r\nContent-Type: text/html\r\nConnection: Closed\r\n\r\n%s\r\n", statusCode, contentLength, content);
+int httpParser_GenerateHttpResponse(char *replyBuffer, size_t bufferLen, const HttpStatusCode_t statusCode, const HttpContentType_t contentType, const char *content, const int contentLength) {
+    return snprintf(replyBuffer, bufferLen, "HTTP/1.1 %d OK\r\nContent-Length: %d\r\nContent-Type: %s\r\nConnection: Closed\r\n\r\n%s\r\n", statusCode, contentLength, httpParser_GetContentTypeAsString(contentType), content);
+}
+
+HttpContentType_t httpParser_DetermineContentTypeFromFileExtension(const char *filePath) {
+    char *token = NULL;
+    char *saveState = NULL;
+    char tmpFileBuffer[BUFSIZ];
+    char auxBuffer[BUFSIZ];
+    HttpContentType_t contentType;
+
+    memset(auxBuffer, 0, BUFSIZ);
+    memcpy(tmpFileBuffer, filePath, BUFSIZ);
+
+    token = strtok_r(tmpFileBuffer, ".", &saveState);
+
+    while(token) {
+	memcpy(auxBuffer, token, BUFSIZ);
+
+        token = strtok_r(NULL, ".", &saveState);
+    }
+
+    if (strcmp(auxBuffer, "html") == 0) {
+	contentType = HTTP_CONTENT_TEXT_HTML;
+    }
+    else if (strcmp(auxBuffer, "xml") == 0) {
+	contentType = HTTP_CONTENT_TEXT_XML;
+    }
+    else {
+	contentType = HTTP_CONTENT_TEXT_PLAIN;
+    }
+
+    return contentType;
+}
+
+char *httpParser_GetContentTypeAsString(const HttpContentType_t contentType) {
+    switch(contentType) {
+	case HTTP_CONTENT_TEXT_HTML:
+	    return "text/html";
+
+	case HTTP_CONTENT_TEXT_XML:
+	    return "text/xml";
+
+	case HTTP_CONTENT_TEXT_PLAIN:
+	default:
+	    return "text/plain";
+    }
 }

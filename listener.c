@@ -24,6 +24,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "listener.h"
 
@@ -41,8 +42,13 @@ int listener_Init(uint32_t ipAddressToUse, uint16_t portToUse) {
     memset(&sockAddrOther, 0, sockLength);
 
     if ((socketFd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
-        printf("Unable to get TCP/IP socket file descriptor. Error: %d.\n", errno);
+        printf("Unable to get TCP/IP socket file descriptor. Error: %s.\n", strerror(errno));
         return -1;
+    }
+
+    if (fcntl(socketFd, F_SETFL, O_NONBLOCK) < -1) {
+	printf("Unable to set nonblocking attribute to socket. Error: %s\n", strerror(errno));
+	return -1;
     }
 
     return 0;
@@ -73,6 +79,10 @@ int listener_ListenToPort() {
 int listener_AcceptNewConnections(int *newConnectionSocket, struct sockaddr_in *newConnection,
                                   socklen_t *newConnectionLength) {
     if ((*newConnectionSocket = accept(socketFd, (struct sockaddr *) newConnection, newConnectionLength)) == -1) {
+	if (EAGAIN == errno || EWOULDBLOCK == errno) {
+		usleep(100000);
+		return -1;
+	}
         printf("Unable to accept new connection. Error: %d.\n", errno);
         return -1;
     }

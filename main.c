@@ -25,11 +25,11 @@
 #include <pthread.h>
 #include <errno.h>
 #include <string.h>
-#include <signal.h>
 
 #include "connections.h"
 #include "listener.h"
 #include "worker.h"
+#include "signalHandler.h"
 
 #define DEFAULT_HTTP_PORT (8080)
 
@@ -37,14 +37,11 @@ static uint32_t numWorkers = 0;
 static pthread_t threads[MAX_NUM_WORKERS];
 static Connection_t connections[MAX_NUM_WORKERS];
 static char connectionsStarted = 0, listenerStarted = 0;
-static volatile char running = 1;
 static int selectedPort = DEFAULT_HTTP_PORT;
 
 static void parseOpt(int argc, char **argv);
 
 static int spawnNewWorker(int newConnectionSocket, struct sockaddr_in *newConnection, socklen_t newConnectionLength);
-
-static void signalHandler(int signal);
 
 static void cleanup();
 
@@ -57,10 +54,12 @@ int main(int argc, char **argv) {
     
     memset(threads, 0, MAX_NUM_WORKERS);
     
-    signal(SIGINT, signalHandler);
-    signal(SIGTERM, signalHandler);
-    
     parseOpt(argc, argv);
+
+    if(signals_init() < 0) {
+	printf("Unable to setup the signal handler.");
+	return 1;
+    }
     
     if (connections_Init() != 0) exitOnError();
     else connectionsStarted = 1;
@@ -72,7 +71,7 @@ int main(int argc, char **argv) {
     
     if (listener_ListenToPort() != 0) exitOnError();
     
-    while (running) {
+    while (!signals_finishProc) {
         if (listener_AcceptNewConnections(&newConnectionFd, &newConnectionSocket, &newConnectionLength) == 0) {
             spawnNewWorker(newConnectionFd, &newConnectionSocket, newConnectionLength);
         }
@@ -155,22 +154,6 @@ static int spawnNewWorker(int newConnectionSocket, struct sockaddr_in *newConnec
         printf("Unable to spawn new worker: Reached max number of worker threads [%d/%d].\n", (int) numWorkers,
                MAX_NUM_WORKERS);
         return -1;
-    }
-}
-
-static void signalHandler(int signal) {
-    switch (signal) {
-        case SIGINT:
-            printf("Interrupt received. Signaling process to stop...\n");
-            running = 0;
-            break;
-        case SIGTSTP:
-        case SIGTERM:
-            printf("Termination received. Signaling process to stop...\n");
-            running = 0;
-            break;
-        default:
-            break;
     }
 }
 

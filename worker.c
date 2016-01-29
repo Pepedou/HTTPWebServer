@@ -69,23 +69,24 @@ void *worker_ServeRequest(void *params) {
     receivedBytes = receiveRequest(connection, requestBuffer, MAX_HTTP_REQUEST_SIZE);
     
     if (!receivedBytes) {
-        httpParser_GenerateHttpResponse(replyBuffer, REPLY_MAX_LEN, HTTP_ERROR_BAD_REQUEST, BAD_REQUEST_ERROR_MSG, BAD_REQUEST_ERROR_MSG_LEN);
+        httpParser_GenerateHttpResponse(replyBuffer, REPLY_MAX_LEN, HTTP_ERROR_BAD_REQUEST, HTTP_CONTENT_TEXT_HTML, BAD_REQUEST_ERROR_MSG, BAD_REQUEST_ERROR_MSG_LEN);
     }
     else {
         linesParsed = httpParser_GetRequestLines((char *) requestBuffer, linesBuffer, MAX_REQUEST_LINES, &saveState);
         
         if (linesParsed) {
             if (!httpParser_ParseRequestLine(linesBuffer[0], &requestData, &saveState)) {
-                httpParser_GenerateHttpResponse(replyBuffer, REPLY_MAX_LEN, HTTP_ERROR_BAD_REQUEST, BAD_REQUEST_ERROR_MSG, BAD_REQUEST_ERROR_MSG_LEN);
+                httpParser_GenerateHttpResponse(replyBuffer, REPLY_MAX_LEN, HTTP_ERROR_BAD_REQUEST, HTTP_CONTENT_TEXT_HTML, BAD_REQUEST_ERROR_MSG, BAD_REQUEST_ERROR_MSG_LEN);
             }
             else {
                 switch (requestData.requestMethod)
                 {
                     case HTTP_REQM_GET:
+		    case HTTP_REQM_POST:
                         executeActionForGETRequest(&requestData, replyBuffer, REPLY_MAX_LEN);
                         break;
                     default:
-                        httpParser_GenerateHttpResponse(replyBuffer, REPLY_MAX_LEN, HTTP_ERROR_NOT_IMPLEMENTED, NOT_IMPLEMENTED_ERROR_MSG, NOT_IMPLEMENTED_ERROR_MSG_LEN);
+                        httpParser_GenerateHttpResponse(replyBuffer, REPLY_MAX_LEN, HTTP_ERROR_NOT_IMPLEMENTED, HTTP_CONTENT_TEXT_HTML, NOT_IMPLEMENTED_ERROR_MSG, NOT_IMPLEMENTED_ERROR_MSG_LEN);
                         break;
                 }
             }
@@ -114,17 +115,19 @@ static ssize_t receiveRequest(Connection_t *connection, uint8_t *buffer, size_t 
 static void executeActionForGETRequest(const HttpRequestData_t *requestData, char *replyBuffer, const size_t bufferLen) {
     long bytesRead = 0L;
     char fileBuffer[MAX_FILE_LEN];
+    HttpContentType_t contentType;
     
     bytesRead = fetchFile(fileBuffer, MAX_FILE_LEN, requestData->requestURI);
+    contentType = httpParser_DetermineContentTypeFromFileExtension(requestData->requestURI);
     
     if (bytesRead == 0L) {
-        httpParser_GenerateHttpResponse(replyBuffer, bufferLen, HTTP_ERROR_NOT_FOUND, NOT_FOUND_MSG, NOT_FOUND_MSG_LEN);
+        httpParser_GenerateHttpResponse(replyBuffer, bufferLen, HTTP_ERROR_NOT_FOUND, HTTP_CONTENT_TEXT_HTML, NOT_FOUND_MSG, NOT_FOUND_MSG_LEN);
     }
     else if (bytesRead == -1L) {
-        httpParser_GenerateHttpResponse(replyBuffer, bufferLen, HTTP_ERROR_SERVER_INTERNAL, INTERNAL_ERROR_MSG, INTERNAL_ERROR_MSG_LEN);
+        httpParser_GenerateHttpResponse(replyBuffer, bufferLen, HTTP_ERROR_SERVER_INTERNAL, HTTP_CONTENT_TEXT_HTML, INTERNAL_ERROR_MSG, INTERNAL_ERROR_MSG_LEN);
     }
     else {
-        httpParser_GenerateHttpResponse(replyBuffer, bufferLen, HTTP_SUCCESS_OK, fileBuffer, bytesRead);
+        httpParser_GenerateHttpResponse(replyBuffer, bufferLen, HTTP_SUCCESS_OK, contentType, fileBuffer, bytesRead);
     }
     
     printf("%s\n", replyBuffer);

@@ -136,12 +136,12 @@ int httpParser_GenerateHttpResponse(char *replyBuffer, size_t bufferLen, const H
 HttpContentType_t httpParser_DetermineContentTypeFromFileExtension(const char *filePath) {
     char *token = NULL;
     char *saveState = NULL;
-    char tmpFileBuffer[BUFSIZ];
+    char tmpFileBuffer[MAX_REQUEST_URI_LEN];
     char auxBuffer[BUFSIZ];
     HttpContentType_t contentType;
 
     memset(auxBuffer, 0, BUFSIZ);
-    memcpy(tmpFileBuffer, filePath, BUFSIZ);
+    memcpy(tmpFileBuffer, filePath, MAX_REQUEST_URI_LEN);
 
     token = strtok_r(tmpFileBuffer, ".", &saveState);
 

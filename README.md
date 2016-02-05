@@ -9,4 +9,4 @@ mkdir build<br>
 cd build<br>
 cmake ..<br>
 make<br>
-./WebServer -d<directory> -p<port>
+./WebServer -d/var/www -p8080 //If you want to serve files from /var/www using the port 8080.

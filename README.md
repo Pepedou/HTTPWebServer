@@ -9,4 +9,4 @@ In the project's root directory, run the following commands:
 `cd build`<br>
 `cmake ..`<br>
 `make`<br>
-`./WebServer -d/var/www -p8080` //If you want to serve files from /var/www using the port 8080.
+`./WebServer -d <public_html_directory> -p <port>`
